@@ -121,8 +121,12 @@ partidos con **puntaje pleno** (10 en grupos / 20 en eliminación), luego 7, lue
    marcador real, desglose de puntos.
 5. **Posiciones** — total, plenos, desempate.
 
-Estilo: temático Mundial 2026, limpio y deportivo, motion con framer-motion,
-hero/gráficos con Ideogram.
+Estilo: **liquid glass** (glassmorphism estilo Apple) — capas translúcidas con
+`backdrop-blur`, bordes claros sutiles, sombras suaves, brillo especular en los
+bordes, profundidad por capas. Fondo temático Mundial 2026 (hero/gráficos con
+Ideogram) detrás del vidrio. Motion con framer-motion (suave, springs).
+Tokens de vidrio reutilizables en Tailwind/`index.css` (ej. `.glass`, `.glass-card`).
+Respetar `prefers-reduced-motion` y mantener contraste/legibilidad sobre el blur.
 
 ## 8. Reglas de negocio
 
