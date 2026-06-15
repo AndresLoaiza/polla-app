@@ -128,6 +128,10 @@ Ideogram) detrás del vidrio. Motion con framer-motion (suave, springs).
 Tokens de vidrio reutilizables en Tailwind/`index.css` (ej. `.glass`, `.glass-card`).
 Respetar `prefers-reduced-motion` y mantener contraste/legibilidad sobre el blur.
 
+**Color por usuario (consistente en toda la app):** Melisa = **morado**, Andrés
+= **rojo**. Aplica a predicciones, fila de la tabla, desgloses, badges y acentos
+de cada uno. Tokens en `index.css` (ej. `--user-melisa`, `--user-andres`).
+
 ## 8. Reglas de negocio
 
 - **Bloqueo:** una predicción se puede crear/editar hasta `inicio − 10 min`.
