@@ -38,12 +38,10 @@ export default function MatchDetail({ partido, predicciones, usuario }:
   return (
     <GlassCard className="p-4">
       <div className="text-center mb-3">
-        <div className="font-semibold flex items-center justify-center gap-2">
-          <span>{bandera(partido.equipo_local)}</span>
-          <span>{nombreEs(partido.equipo_local)}</span>
-          <span className="opacity-50 mx-1">vs</span>
-          <span>{nombreEs(partido.equipo_visitante)}</span>
-          <span>{bandera(partido.equipo_visitante)}</span>
+        <div className="font-semibold flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+          <span className="whitespace-nowrap">{bandera(partido.equipo_local)} {nombreEs(partido.equipo_local)}</span>
+          <span className="opacity-50">vs</span>
+          <span className="whitespace-nowrap">{nombreEs(partido.equipo_visitante)} {bandera(partido.equipo_visitante)}</span>
         </div>
         {finalizado
           ? <div className="text-2xl font-bold tabular-nums mt-1">{partido.gol_local_real} : {partido.gol_visitante_real}</div>

@@ -12,7 +12,9 @@ function fmtCuenta(ms: number): string {
   return `cierra en ${m}m`;
 }
 
-/** Fila editable de un partido sin boton propio: el guardado es global. */
+/** Fila editable de un partido sin boton propio: el guardado es global.
+ *  Layout apilado: nombres centrados arriba, marcadores centrados abajo, para
+ *  que los nombres largos (Estados Unidos, Países Bajos) nunca se desborden. */
 export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange }:
   { partido: Partido; gl: number; gv: number; usuario: Usuario; tocado: boolean;
     onChange: (gl: number, gv: number) => void }) {
@@ -23,19 +25,26 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
         <span>{partido.grupo ? `Grupo ${partido.grupo}` : 'Eliminación'}</span>
         <span>{fmtCuenta(msAlCierre(partido.fecha_hora))}</span>
       </div>
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex-1 flex items-center justify-end gap-2 font-semibold text-right">
-          <span className="truncate">{nombreEs(partido.equipo_local)}</span>
-          <span className="text-xl shrink-0">{bandera(partido.equipo_local)}</span>
-        </span>
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <Equipo nombre={partido.equipo_local} />
+        <Equipo nombre={partido.equipo_visitante} />
+      </div>
+
+      <div className="flex items-center justify-center gap-4">
         <ScoreInput value={gl} onChange={n => onChange(n, gv)} color={color} />
-        <span className="opacity-50">:</span>
+        <span className="opacity-40 text-lg">:</span>
         <ScoreInput value={gv} onChange={n => onChange(gl, n)} color={color} />
-        <span className="flex-1 flex items-center gap-2 font-semibold">
-          <span className="text-xl shrink-0">{bandera(partido.equipo_visitante)}</span>
-          <span className="truncate">{nombreEs(partido.equipo_visitante)}</span>
-        </span>
       </div>
     </GlassCard>
+  );
+}
+
+function Equipo({ nombre }: { nombre: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <span className="text-2xl leading-none">{bandera(nombre)}</span>
+      <span className="text-sm font-semibold leading-tight">{nombreEs(nombre)}</span>
+    </div>
   );
 }
