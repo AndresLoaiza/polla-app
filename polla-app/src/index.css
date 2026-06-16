@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0b14;
+  --color-bg-2: #141425;
+  --color-user-melisa: #a855f7;   /* morado */
+  --color-user-andres: #ef4444;   /* rojo */
+  --font-display: 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-display);
+  color: #f5f5fa;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, #1e1b4b 0%, transparent 60%),
+    radial-gradient(1000px 500px at 90% 10%, #3b0764 0%, transparent 55%),
+    var(--color-bg);
+  min-height: 100svh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100svh; }
+
+/* --- Liquid glass --- */
+.glass {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.glass-card { border-radius: 1.25rem; }
+
+.user-melisa { color: var(--color-user-melisa); }
+.user-andres { color: var(--color-user-andres); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
