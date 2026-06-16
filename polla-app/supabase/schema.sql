@@ -54,3 +54,18 @@ create policy "esp lectura" on polla_especiales for select to anon using (true);
 create policy "esp insert" on polla_especiales for insert to anon with check (true);
 create policy "esp update" on polla_especiales for update to anon using (true) with check (true);
 create policy "espres lectura" on polla_especiales_resultado for select to anon using (true);
+
+-- Suscripciones Web Push (Fase 2). La policy SELECT es necesaria: el upsert con
+-- return=representation hace INSERT...RETURNING y sin SELECT da error 42501.
+create table if not exists polla_push_subs (
+  id uuid primary key default gen_random_uuid(),
+  usuario text not null check (usuario in ('andres','melisa')),
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+alter table polla_push_subs enable row level security;
+create policy "subs lectura" on polla_push_subs for select to anon using (true);
+create policy "subs insert" on polla_push_subs for insert to anon with check (true);
+create policy "subs update" on polla_push_subs for update to anon using (true) with check (true);
