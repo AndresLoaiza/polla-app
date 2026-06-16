@@ -7,12 +7,13 @@ import JugadosView from '../views/JugadosView';
 import StandingsView from '../views/StandingsView';
 import ScoringInfo from '../info/ScoringInfo';
 import { USER_COLOR, USER_NOMBRE } from '../../lib/identity';
-import type { Partido, Prediccion, Usuario } from '../../types';
+import type { Partido, Prediccion, Especial, Usuario } from '../../types';
 
 type Tab = 'hoy' | 'partidos' | 'jugados' | 'tabla';
 
-export default function Shell({ usuario, partidos, predicciones, onSavedMany }:
-  { usuario: Usuario; partidos: Partido[]; predicciones: Prediccion[]; onSavedMany: (p: Prediccion[]) => void }) {
+export default function Shell({ usuario, partidos, predicciones, especiales, campeonReal, onSavedMany, onSavedEspecial }:
+  { usuario: Usuario; partidos: Partido[]; predicciones: Prediccion[]; especiales: Especial[];
+    campeonReal: string | null; onSavedMany: (p: Prediccion[]) => void; onSavedEspecial: (e: Especial) => void }) {
   const [tab, setTab] = useState<Tab>('hoy');
   const [info, setInfo] = useState(false);
   const tabs: { id: Tab; label: string; icon: typeof Trophy }[] = [
@@ -46,7 +47,8 @@ export default function Shell({ usuario, partidos, predicciones, onSavedMany }:
       {tab === 'hoy' && <TodayView usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />}
       {tab === 'partidos' && <PartidosView usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />}
       {tab === 'jugados' && <JugadosView usuario={usuario} partidos={partidos} predicciones={predicciones} />}
-      {tab === 'tabla' && <StandingsView partidos={partidos} predicciones={predicciones} />}
+      {tab === 'tabla' && <StandingsView partidos={partidos} predicciones={predicciones}
+        especiales={especiales} campeonReal={campeonReal} usuario={usuario} onSavedEspecial={onSavedEspecial} />}
 
       <nav className="fixed bottom-0 inset-x-0 glass border-t border-white/10 flex justify-around py-2">
         {tabs.map(t => (

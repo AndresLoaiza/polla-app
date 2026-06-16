@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calcularTabla } from './standings';
-import type { Partido, Prediccion } from '../types';
+import type { Partido, Prediccion, Especial } from '../types';
 
 const base = {
   ext_id: 'x', grupo: null, fecha_hora: '2026-06-16T18:00:00Z',
@@ -44,5 +44,19 @@ describe('calcularTabla', () => {
     expect(tabla[0].usuario).toBe('andres');   // gana por mas plenos
     expect(tabla[0].plenos).toBe(1);
     expect(tabla[1].plenos).toBe(0);
+  });
+
+  it('suma +20 al que acertó el campeón', () => {
+    const partidos = [p('1', 1, 0)];
+    const preds = [pred('1', 'andres', 1, 0)];   // andres 10 de partidos
+    const esp: Especial[] = [{ id: 'e1', usuario: 'melisa', tipo: 'campeon', valor: 'Brazil', updated_at: '' }];
+    const tabla = calcularTabla(partidos, preds, esp, 'Brazil');
+    const melisa = tabla.find(r => r.usuario === 'melisa')!;
+    expect(melisa.bonus).toBe(20);
+    expect(melisa.total).toBe(20);   // 0 de partidos + 20 campeón
+    const andres = tabla.find(r => r.usuario === 'andres')!;
+    expect(andres.bonus).toBe(0);
+    expect(andres.total).toBe(10);
+    expect(tabla[0].usuario).toBe('melisa');  // 20 > 10
   });
 });

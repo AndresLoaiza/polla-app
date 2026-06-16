@@ -1,11 +1,13 @@
 import GlassCard from '../glass/GlassCard';
+import CampeonCard from '../especial/CampeonCard';
 import { calcularTabla } from '../../lib/standings';
 import { USER_COLOR, USER_NOMBRE } from '../../lib/identity';
-import type { Partido, Prediccion } from '../../types';
+import type { Partido, Prediccion, Especial, Usuario } from '../../types';
 
-export default function StandingsView({ partidos, predicciones }:
-  { partidos: Partido[]; predicciones: Prediccion[] }) {
-  const tabla = calcularTabla(partidos, predicciones);
+export default function StandingsView({ partidos, predicciones, especiales, campeonReal, usuario, onSavedEspecial }:
+  { partidos: Partido[]; predicciones: Prediccion[]; especiales: Especial[];
+    campeonReal: string | null; usuario: Usuario; onSavedEspecial: (e: Especial) => void }) {
+  const tabla = calcularTabla(partidos, predicciones, especiales, campeonReal);
   return (
     <div className="flex flex-col gap-3 pb-24">
       {tabla.map((f, i) => (
@@ -17,10 +19,15 @@ export default function StandingsView({ partidos, predicciones }:
           </span>
           <span className="text-right">
             <span className="text-2xl font-bold">{f.total}</span>
-            <span className="block text-xs opacity-60">{f.plenos} plenos</span>
+            <span className="block text-xs opacity-60">
+              {f.plenos} plenos{f.bonus > 0 ? ` · +${f.bonus} campeón` : ''}
+            </span>
           </span>
         </GlassCard>
       ))}
+
+      <CampeonCard partidos={partidos} especiales={especiales} campeonReal={campeonReal}
+        usuario={usuario} onSaved={onSavedEspecial} />
     </div>
   );
 }

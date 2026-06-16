@@ -26,6 +26,18 @@ export interface Prediccion {
   updated_at: string;
 }
 
+export type TipoEspecial = 'campeon';
+
+export interface Especial {
+  id: string;
+  usuario: Usuario;
+  tipo: TipoEspecial;
+  valor: string;            // nombre del equipo (como en la API)
+  updated_at: string;
+}
+
+export const PUNTOS_CAMPEON = 20;
+
 export interface Desglose {
   resultado: number;
   golLocal: number;

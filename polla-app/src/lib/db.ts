@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Partido, Prediccion, Usuario } from '../types';
+import type { Partido, Prediccion, Usuario, Especial } from '../types';
 
 const DESDE = '2026-06-16T00:00:00Z';
 
@@ -46,6 +46,30 @@ export async function guardarPredicciones(
     .select();
   if (error) throw error;
   return (data ?? []) as Prediccion[];
+}
+
+export async function fetchEspeciales(): Promise<Especial[]> {
+  const { data, error } = await supabase.from('polla_especiales').select('*');
+  if (error) throw error;
+  return (data ?? []) as Especial[];
+}
+
+/** Devuelve el campeón real si ya se definió, o null. */
+export async function fetchCampeonReal(): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('polla_especiales_resultado').select('valor').eq('tipo', 'campeon').maybeSingle();
+  if (error) throw error;
+  return data?.valor ?? null;
+}
+
+export async function guardarCampeon(usuario: Usuario, valor: string): Promise<Especial> {
+  const { data, error } = await supabase
+    .from('polla_especiales')
+    .upsert({ usuario, tipo: 'campeon', valor, updated_at: new Date().toISOString() },
+            { onConflict: 'usuario,tipo' })
+    .select().single();
+  if (error) throw error;
+  return data as Especial;
 }
 
 /** Fallback manual: setear el marcador real desde la app. */

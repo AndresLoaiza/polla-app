@@ -34,3 +34,23 @@ create policy "polla_predicciones lectura" on polla_predicciones for select to a
 -- anon puede crear/editar predicciones; el service role (cron) escribe resultados
 create policy "polla_predicciones insert" on polla_predicciones for insert to anon with check (true);
 create policy "polla_predicciones update" on polla_predicciones for update to anon using (true) with check (true);
+
+-- Apuestas especiales (Fase 2): por ahora solo "campeon" (20 pts)
+create table if not exists polla_especiales (
+  id uuid primary key default gen_random_uuid(),
+  usuario text not null check (usuario in ('andres','melisa')),
+  tipo text not null check (tipo in ('campeon')),
+  valor text not null,
+  updated_at timestamptz not null default now(),
+  unique (usuario, tipo)
+);
+create table if not exists polla_especiales_resultado (
+  tipo text primary key check (tipo in ('campeon')),
+  valor text not null
+);
+alter table polla_especiales enable row level security;
+alter table polla_especiales_resultado enable row level security;
+create policy "esp lectura" on polla_especiales for select to anon using (true);
+create policy "esp insert" on polla_especiales for insert to anon with check (true);
+create policy "esp update" on polla_especiales for update to anon using (true) with check (true);
+create policy "espres lectura" on polla_especiales_resultado for select to anon using (true);
