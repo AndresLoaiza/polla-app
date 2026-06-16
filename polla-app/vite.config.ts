@@ -9,7 +9,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,png,svg,webp,ico}'],
+      },
       manifest: {
         name: 'Polla Mundial 2026',
         short_name: 'Polla',
@@ -25,18 +31,6 @@ export default defineConfig({
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
           { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
-      workbox: {
-        runtimeCaching: [{
-          urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co') && url.pathname.startsWith('/rest/'),
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'supabase-rest',
-            networkTimeoutSeconds: 5,
-            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
-            cacheableResponse: { statuses: [0, 200] },
-          },
-        }],
       },
     }),
   ],

@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { CalendarDays, Flag, History, Trophy, HelpCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CalendarDays, Flag, History, Trophy, HelpCircle, Bell, BellRing } from 'lucide-react';
+import { activarRecordatorios, estaSuscrito, type EstadoPush } from '../../lib/push';
 import TodayView from '../views/TodayView';
 import PartidosView from '../views/PartidosView';
 import JugadosView from '../views/JugadosView';
@@ -16,6 +17,24 @@ export default function Shell({ usuario, partidos, predicciones, especiales, cam
     campeonReal: string | null; onSavedMany: (p: Prediccion[]) => void; onSavedEspecial: (e: Especial) => void }) {
   const [tab, setTab] = useState<Tab>('hoy');
   const [info, setInfo] = useState(false);
+  const [suscrito, setSuscrito] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => { estaSuscrito().then(setSuscrito); }, []);
+
+  async function toggleRecordatorios() {
+    const r = await activarRecordatorios(usuario);
+    const msg: Record<EstadoPush, string> = {
+      ok: '🔔 Recordatorios activados',
+      denegado: 'Permiso de notificaciones denegado',
+      'no-soportado': 'Tu navegador no soporta notificaciones (en iPhone instala la app primero)',
+      'sin-clave': 'Falta configurar VAPID',
+      error: 'No se pudo activar',
+    };
+    if (r === 'ok') setSuscrito(true);
+    setToast(msg[r]);
+    setTimeout(() => setToast(null), 4000);
+  }
   const tabs: { id: Tab; label: string; icon: typeof Trophy }[] = [
     { id: 'hoy', label: 'Hoy', icon: CalendarDays },
     { id: 'partidos', label: 'Partidos', icon: Flag },
@@ -31,6 +50,11 @@ export default function Shell({ usuario, partidos, predicciones, especiales, cam
             <span className="text-2xl">⚽</span> Polla Mundial 2026
           </h1>
           <div className="flex items-center gap-2">
+            <button aria-label="recordatorios" onClick={toggleRecordatorios}
+              className="glass w-9 h-9 rounded-full flex items-center justify-center"
+              style={suscrito ? { color: 'var(--color-pitch)' } : undefined}>
+              {suscrito ? <BellRing className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+            </button>
             <button aria-label="cómo se puntúa" onClick={() => setInfo(true)}
               className="glass w-9 h-9 rounded-full flex items-center justify-center">
               <HelpCircle className="w-5 h-5" />
@@ -62,6 +86,15 @@ export default function Shell({ usuario, partidos, predicciones, especiales, cam
 
       <AnimatePresence>
         {info && <ScoringInfo onClose={() => setInfo(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+            className="fixed top-4 inset-x-0 z-50 flex justify-center px-4">
+            <div className="glass rounded-full px-4 py-2 text-sm font-medium text-center">{toast}</div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
