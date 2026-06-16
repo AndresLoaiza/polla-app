@@ -1,4 +1,4 @@
-import FixturesView from './FixturesView';
+import PartidosView from './PartidosView';
 import type { Partido, Prediccion, Usuario } from '../../types';
 
 function esHoy(iso: string): boolean {
@@ -7,9 +7,9 @@ function esHoy(iso: string): boolean {
 }
 
 export default function TodayView(props:
-  { partidos: Partido[]; predicciones: Prediccion[]; usuario: Usuario; onSaved: (p: Prediccion) => void }) {
+  { partidos: Partido[]; predicciones: Prediccion[]; usuario: Usuario; onSavedMany: (p: Prediccion[]) => void }) {
   const hoy = props.partidos.filter(p => esHoy(p.fecha_hora));
   if (hoy.length === 0)
-    return <p className="opacity-60 text-center py-16">No hay partidos hoy. Revisa Fixtures.</p>;
-  return <FixturesView {...props} partidos={hoy} />;
+    return <p className="opacity-60 text-center py-16">No hay partidos hoy. Revisa Partidos.</p>;
+  return <PartidosView {...props} partidos={hoy} />;
 }

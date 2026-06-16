@@ -1,6 +1,7 @@
 import GlassCard from '../glass/GlassCard';
 import { rivalRevelado } from '../../lib/lock';
 import { puntuar } from '../../lib/scoring';
+import { nombreEs, bandera } from '../../lib/equipos';
 import { USER_COLOR, USER_NOMBRE } from '../../lib/identity';
 import type { Partido, Prediccion, Usuario } from '../../types';
 
@@ -9,7 +10,7 @@ const OTRO: Record<Usuario, Usuario> = { andres: 'melisa', melisa: 'andres' };
 function FilaDesglose({ p, partido, usuario }:
   { p?: Prediccion; partido: Partido; usuario: Usuario }) {
   const color = USER_COLOR[usuario];
-  if (!p) return <p className="opacity-50 text-sm">{USER_NOMBRE[usuario]} no predijo</p>;
+  if (!p) return <p className="opacity-50 text-sm py-1">{USER_NOMBRE[usuario]} no predijo</p>;
   const finalizado = partido.gol_local_real !== null && partido.gol_visitante_real !== null;
   const d = finalizado
     ? puntuar(p.gol_local, p.gol_visitante, partido.gol_local_real!, partido.gol_visitante_real!, partido.fase)
@@ -37,10 +38,16 @@ export default function MatchDetail({ partido, predicciones, usuario }:
   return (
     <GlassCard className="p-4">
       <div className="text-center mb-3">
-        <div className="font-semibold">{partido.equipo_local} vs {partido.equipo_visitante}</div>
+        <div className="font-semibold flex items-center justify-center gap-2">
+          <span>{bandera(partido.equipo_local)}</span>
+          <span>{nombreEs(partido.equipo_local)}</span>
+          <span className="opacity-50 mx-1">vs</span>
+          <span>{nombreEs(partido.equipo_visitante)}</span>
+          <span>{bandera(partido.equipo_visitante)}</span>
+        </div>
         {finalizado
-          ? <div className="text-2xl font-bold tabular-nums">{partido.gol_local_real} : {partido.gol_visitante_real}</div>
-          : <div className="opacity-60 text-sm">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>}
+          ? <div className="text-2xl font-bold tabular-nums mt-1">{partido.gol_local_real} : {partido.gol_visitante_real}</div>
+          : <div className="opacity-60 text-sm mt-1">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>}
       </div>
       <FilaDesglose p={mia} partido={partido} usuario={usuario} />
       {revelado

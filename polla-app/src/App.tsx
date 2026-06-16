@@ -18,14 +18,16 @@ export default function App() {
       .finally(() => setCargando(false));
   }, [usuario]);
 
-  function onSaved(p: Prediccion) {
+  function onSavedMany(saved: Prediccion[]) {
+    if (saved.length === 0) return;
     setPredicciones(prev => {
-      const otras = prev.filter(x => !(x.partido_id === p.partido_id && x.usuario === p.usuario));
-      return [...otras, p];
+      const claves = new Set(saved.map(s => s.partido_id + s.usuario));
+      const otras = prev.filter(x => !claves.has(x.partido_id + x.usuario));
+      return [...otras, ...saved];
     });
   }
 
   if (!usuario) return <AccessGate onUnlocked={setUsuario} />;
   if (cargando) return <p className="text-center py-20 opacity-60">Cargando…</p>;
-  return <Shell usuario={usuario} partidos={partidos} predicciones={predicciones} onSaved={onSaved} />;
+  return <Shell usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />;
 }

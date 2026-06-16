@@ -33,6 +33,21 @@ export async function guardarPrediccion(
   return data as Prediccion;
 }
 
+/** Guarda varias predicciones de un usuario en una sola operacion. */
+export async function guardarPredicciones(
+  items: { partido_id: string; gol_local: number; gol_visitante: number }[], usuario: Usuario,
+): Promise<Prediccion[]> {
+  if (items.length === 0) return [];
+  const now = new Date().toISOString();
+  const rows = items.map(i => ({ ...i, usuario, updated_at: now }));
+  const { data, error } = await supabase
+    .from('polla_predicciones')
+    .upsert(rows, { onConflict: 'partido_id,usuario' })
+    .select();
+  if (error) throw error;
+  return (data ?? []) as Prediccion[];
+}
+
 /** Fallback manual: setear el marcador real desde la app. */
 export async function guardarResultadoManual(
   partido_id: string, gol_local_real: number, gol_visitante_real: number,

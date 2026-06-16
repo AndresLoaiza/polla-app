@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0b0b14;
-  --color-bg-2: #141425;
+  --color-bg: #07120b;
+  --color-bg-2: #0c1a12;
+  --color-pitch: #22c55e;          /* verde cancha */
+  --color-pitch-deep: #15803d;
   --color-user-melisa: #a855f7;   /* morado */
   --color-user-andres: #ef4444;   /* rojo */
   --font-display: 'Inter', system-ui, sans-serif;
@@ -15,11 +17,17 @@ body {
   font-family: var(--font-display);
   color: #f5f5fa;
   background:
-    radial-gradient(1200px 600px at 20% -10%, #1e1b4b 0%, transparent 60%),
-    radial-gradient(1000px 500px at 90% 10%, #3b0764 0%, transparent 55%),
+    radial-gradient(1200px 600px at 20% -10%, #14532d 0%, transparent 60%),
+    radial-gradient(1000px 500px at 90% 10%, #3b0764 0%, transparent 50%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 78px),
     var(--color-bg);
   min-height: 100svh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* franja temática cancha (verde -> dorado) */
+.pitch-stripe {
+  background: linear-gradient(90deg, var(--color-pitch-deep), var(--color-pitch) 45%, #eab308);
 }
 
 #root { min-height: 100svh; }
