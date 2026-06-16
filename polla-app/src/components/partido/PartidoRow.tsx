@@ -12,9 +12,8 @@ function fmtCuenta(ms: number): string {
   return `cierra en ${m}m`;
 }
 
-/** Fila editable de un partido sin boton propio: el guardado es global.
- *  Layout apilado: nombres centrados arriba, marcadores centrados abajo, para
- *  que los nombres largos (Estados Unidos, Países Bajos) nunca se desborden. */
+/** Fila editable. Cada equipo es una columna: bandera + nombre centrados
+ *  directamente encima de su propio marcador. */
 export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange }:
   { partido: Partido; gl: number; gv: number; usuario: Usuario; tocado: boolean;
     onChange: (gl: number, gv: number) => void }) {
@@ -26,25 +25,26 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
         <span>{fmtCuenta(msAlCierre(partido.fecha_hora))}</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <Equipo nombre={partido.equipo_local} />
-        <Equipo nombre={partido.equipo_visitante} />
-      </div>
-
-      <div className="flex items-center justify-center gap-4">
-        <ScoreInput value={gl} onChange={n => onChange(n, gv)} color={color} />
-        <span className="opacity-40 text-lg">:</span>
-        <ScoreInput value={gv} onChange={n => onChange(gl, n)} color={color} />
+      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+        <ColumnaEquipo nombre={partido.equipo_local} value={gl} color={color}
+          onChange={n => onChange(n, gv)} />
+        <span className="pb-1.5 text-lg opacity-40">:</span>
+        <ColumnaEquipo nombre={partido.equipo_visitante} value={gv} color={color}
+          onChange={n => onChange(gl, n)} />
       </div>
     </GlassCard>
   );
 }
 
-function Equipo({ nombre }: { nombre: string }) {
+function ColumnaEquipo({ nombre, value, color, onChange }:
+  { nombre: string; value: number; color: string; onChange: (n: number) => void }) {
   return (
-    <div className="flex flex-col items-center gap-1 text-center">
-      <span className="text-2xl leading-none">{bandera(nombre)}</span>
-      <span className="text-sm font-semibold leading-tight">{nombreEs(nombre)}</span>
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center justify-end gap-1 min-h-[3.4rem]">
+        <span className="text-2xl leading-none">{bandera(nombre)}</span>
+        <span className="text-sm font-semibold text-center leading-tight">{nombreEs(nombre)}</span>
+      </div>
+      <ScoreInput value={value} onChange={onChange} color={color} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AccessGate from './components/gate/AccessGate';
 import Shell from './components/shell/Shell';
+import BackgroundFx from './components/fx/BackgroundFx';
 import { getStoredUsuario } from './lib/identity';
 import { fetchPartidos, fetchPredicciones } from './lib/db';
 import type { Partido, Prediccion, Usuario } from './types';
@@ -27,7 +28,14 @@ export default function App() {
     });
   }
 
-  if (!usuario) return <AccessGate onUnlocked={setUsuario} />;
-  if (cargando) return <p className="text-center py-20 opacity-60">Cargando…</p>;
-  return <Shell usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />;
+  return (
+    <>
+      <BackgroundFx />
+      {!usuario
+        ? <AccessGate onUnlocked={setUsuario} />
+        : cargando
+          ? <p className="text-center py-20 opacity-60">Cargando…</p>
+          : <Shell usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />}
+    </>
+  );
 }

@@ -15,8 +15,11 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
   const [visibles, setVisibles] = useState(PAGINA);
   const [guardando, setGuardando] = useState(false);
 
+  // los jugados viven en su propia pestaña
+  partidos = partidos.filter(p => p.estado !== 'finalizado');
+
   if (partidos.length === 0)
-    return <p className="opacity-60 text-center py-16">No hay partidos cargados todavía.</p>;
+    return <p className="opacity-60 text-center py-16">No hay partidos próximos.</p>;
 
   function valorDe(p: Partido) {
     const e = edits[p.id];
