@@ -32,11 +32,13 @@ describe('calcularTabla', () => {
 
   it('desempata por numero de plenos a igualdad de total', () => {
     // andres: un pleno (10). melisa: dos parciales de 5 (=10) sin plenos.
+    // ambos predicen ambos partidos para que cuenten.
     const partidos = [p('1', 1, 0), p('2', 2, 0)];
     const preds = [
       pred('1', 'andres', 1, 0),   // pleno 10
+      pred('2', 'andres', 0, 2),   // 0
       pred('1', 'melisa', 3, 1),   // 5
-      pred('2', 'melisa', 4, 1),   // 5
+      pred('2', 'melisa', 5, 1),   // 5
     ];
     const tabla = calcularTabla(partidos, preds);
     expect(tabla[0].total).toBe(10);
@@ -46,9 +48,26 @@ describe('calcularTabla', () => {
     expect(tabla[1].plenos).toBe(0);
   });
 
+  it('ignora partidos donde alguno de los dos no predijo', () => {
+    // ambos predicen el 1; solo andres predice el 2 -> el 2 no cuenta para nadie
+    const partidos = [p('1', 1, 0), p('2', 2, 1)];
+    const preds = [
+      pred('1', 'andres', 1, 0),   // pleno 10
+      pred('1', 'melisa', 1, 0),   // pleno 10
+      pred('2', 'andres', 2, 1),   // pleno, pero no cuenta (melisa no predijo)
+    ];
+    const tabla = calcularTabla(partidos, preds);
+    const andres = tabla.find(r => r.usuario === 'andres')!;
+    const melisa = tabla.find(r => r.usuario === 'melisa')!;
+    expect(andres.total).toBe(10);
+    expect(andres.plenos).toBe(1);
+    expect(melisa.total).toBe(10);
+  });
+
   it('suma +20 al que acertó el campeón', () => {
     const partidos = [p('1', 1, 0)];
-    const preds = [pred('1', 'andres', 1, 0)];   // andres 10 de partidos
+    // ambos predicen el partido (melisa con 0 pts) para que cuente
+    const preds = [pred('1', 'andres', 1, 0), pred('1', 'melisa', 0, 1)];   // andres 10, melisa 0 de partidos
     const esp: Especial[] = [{ id: 'e1', usuario: 'melisa', tipo: 'campeon', valor: 'Brazil', updated_at: '' }];
     const tabla = calcularTabla(partidos, preds, esp, 'Brazil');
     const melisa = tabla.find(r => r.usuario === 'melisa')!;

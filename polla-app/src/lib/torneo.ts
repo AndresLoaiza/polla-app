@@ -11,6 +11,14 @@ export function equiposDelTorneo(partidos: Partido[]): string[] {
   return [...set].sort((a, b) => nombreEs(a).localeCompare(nombreEs(b), 'es'));
 }
 
+/** True si la fecha (ISO UTC) cae en el día de hoy (hora local del dispositivo). */
+export function esHoy(iso: string, ahora: Date = new Date()): boolean {
+  const d = new Date(iso);
+  return d.getFullYear() === ahora.getFullYear() &&
+    d.getMonth() === ahora.getMonth() &&
+    d.getDate() === ahora.getDate();
+}
+
 /** Inicio de la fase de eliminación (primer partido), o null si aún no hay. */
 export function inicioEliminacion(partidos: Partido[]): string | null {
   const elim = partidos.filter(p => p.fase === 'eliminacion').map(p => p.fecha_hora).sort();

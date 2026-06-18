@@ -45,7 +45,10 @@ export default function MatchDetail({ partido, predicciones, usuario }:
         </div>
         {finalizado
           ? <div className="text-2xl font-bold tabular-nums mt-1">{partido.gol_local_real} : {partido.gol_visitante_real}</div>
-          : <div className="opacity-60 text-sm mt-1">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>}
+          : <>
+              <div className="opacity-60 text-sm mt-1">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>
+              <div className="opacity-40 text-xs mt-0.5">Edición cerrada</div>
+            </>}
       </div>
       <FilaDesglose p={mia} partido={partido} usuario={usuario} />
       {revelado
