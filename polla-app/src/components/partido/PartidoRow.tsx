@@ -1,15 +1,14 @@
 import GlassCard from '../glass/GlassCard';
 import ScoreInput from './ScoreInput';
-import { msAlCierre } from '../../lib/lock';
 import { nombreEs, bandera } from '../../lib/equipos';
 import { USER_COLOR } from '../../lib/identity';
 import type { Partido, Usuario } from '../../types';
 
-function fmtCuenta(ms: number): string {
-  const m = Math.floor(ms / 60000), h = Math.floor(m / 60);
-  if (h > 24) return `cierra en ${Math.floor(h / 24)}d`;
-  if (h > 0) return `cierra en ${h}h ${m % 60}m`;
-  return `cierra en ${m}m`;
+/** Fecha y hora del partido en la zona horaria local del dispositivo. */
+function fmtHora(iso: string): string {
+  return new Date(iso).toLocaleString('es-CO', {
+    weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+  });
 }
 
 /** Fila editable. Cada equipo es una columna: bandera + nombre centrados
@@ -22,7 +21,7 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
     <GlassCard className="p-4" style={tocado ? { boxShadow: `0 0 0 1.5px ${color}` } : undefined}>
       <div className="flex items-center justify-between text-xs opacity-70 mb-3">
         <span>{partido.grupo ? `Grupo ${partido.grupo}` : 'Eliminación'}</span>
-        <span>{fmtCuenta(msAlCierre(partido.fecha_hora))}</span>
+        <span>{fmtHora(partido.fecha_hora)}</span>
       </div>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
