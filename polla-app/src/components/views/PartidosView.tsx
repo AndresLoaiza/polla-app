@@ -12,15 +12,17 @@ const PAGINA = 10;
 
 type Edit = { gl: number | null; gv: number | null };
 
-export default function PartidosView({ partidos, predicciones, usuario, onSavedMany }:
-  { partidos: Partido[]; predicciones: Prediccion[]; usuario: Usuario; onSavedMany: (p: Prediccion[]) => void }) {
+export default function PartidosView({ partidos, predicciones, usuario, onSavedMany, excluirHoy }:
+  { partidos: Partido[]; predicciones: Prediccion[]; usuario: Usuario; onSavedMany: (p: Prediccion[]) => void;
+    excluirHoy?: boolean }) {
   const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [visibles, setVisibles] = useState(PAGINA);
   const [guardando, setGuardando] = useState(false);
 
-  // los jugados viven en su propia pestaña, salvo los de hoy: esos siguen
-  // visibles aquí (y en Hoy) aunque ya hayan terminado.
-  partidos = partidos.filter(p => p.estado !== 'finalizado' || esHoy(p.fecha_hora));
+  // Los de hoy viven en la pestaña "Hoy": en "Partidos" se excluyen (excluirHoy).
+  // El resto, los finalizados van a "Jugados".
+  partidos = partidos.filter(p =>
+    esHoy(p.fecha_hora) ? !excluirHoy : p.estado !== 'finalizado');
 
   if (partidos.length === 0)
     return <p className="opacity-60 text-center py-16">No hay partidos próximos.</p>;
@@ -60,7 +62,7 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
         return (
           <PartidoRow key={partido.id} partido={partido} gl={v.gl} gv={v.gv} usuario={usuario}
             tocado={!!edits[partido.id]}
-            onChange={(gl, gv) => setEdits(prev => ({ ...prev, [partido.id]: { gl, gv } }))} />
+            onChange={(gl, gv) => setEdits(prev => ({ ...prev, [partido.id]: { gl: gl ?? 0, gv: gv ?? 0 } }))} />
         );
       })}
 

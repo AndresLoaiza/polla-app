@@ -69,7 +69,7 @@ export default function Shell({ usuario, partidos, predicciones, especiales, cam
       </header>
 
       {tab === 'hoy' && <TodayView usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />}
-      {tab === 'partidos' && <PartidosView usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} />}
+      {tab === 'partidos' && <PartidosView usuario={usuario} partidos={partidos} predicciones={predicciones} onSavedMany={onSavedMany} excluirHoy />}
       {tab === 'jugados' && <JugadosView usuario={usuario} partidos={partidos} predicciones={predicciones} />}
       {tab === 'tabla' && <StandingsView partidos={partidos} predicciones={predicciones}
         especiales={especiales} campeonReal={campeonReal} usuario={usuario} onSavedEspecial={onSavedEspecial} />}
