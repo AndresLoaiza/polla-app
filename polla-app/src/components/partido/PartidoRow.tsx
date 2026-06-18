@@ -15,8 +15,8 @@ function fmtCuenta(ms: number): string {
 /** Fila editable. Cada equipo es una columna: bandera + nombre centrados
  *  directamente encima de su propio marcador. */
 export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange }:
-  { partido: Partido; gl: number; gv: number; usuario: Usuario; tocado: boolean;
-    onChange: (gl: number, gv: number) => void }) {
+  { partido: Partido; gl: number | null; gv: number | null; usuario: Usuario; tocado: boolean;
+    onChange: (gl: number | null, gv: number | null) => void }) {
   const color = USER_COLOR[usuario];
   return (
     <GlassCard className="p-4" style={tocado ? { boxShadow: `0 0 0 1.5px ${color}` } : undefined}>
@@ -37,7 +37,7 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
 }
 
 function ColumnaEquipo({ nombre, value, color, onChange }:
-  { nombre: string; value: number; color: string; onChange: (n: number) => void }) {
+  { nombre: string; value: number | null; color: string; onChange: (n: number) => void }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="flex flex-col items-center justify-end gap-1 min-h-[3.4rem]">

@@ -4,41 +4,48 @@ import PartidoRow from '../partido/PartidoRow';
 import MatchDetail from '../partido/MatchDetail';
 import { estaBloqueado } from '../../lib/lock';
 import { guardarPredicciones } from '../../lib/db';
+import { esHoy } from '../../lib/torneo';
 import { USER_COLOR } from '../../lib/identity';
 import type { Partido, Prediccion, Usuario } from '../../types';
 
 const PAGINA = 10;
 
+type Edit = { gl: number | null; gv: number | null };
+
 export default function PartidosView({ partidos, predicciones, usuario, onSavedMany }:
   { partidos: Partido[]; predicciones: Prediccion[]; usuario: Usuario; onSavedMany: (p: Prediccion[]) => void }) {
-  const [edits, setEdits] = useState<Record<string, { gl: number; gv: number }>>({});
+  const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [visibles, setVisibles] = useState(PAGINA);
   const [guardando, setGuardando] = useState(false);
 
-  // los jugados viven en su propia pestaña
-  partidos = partidos.filter(p => p.estado !== 'finalizado');
+  // los jugados viven en su propia pestaña, salvo los de hoy: esos siguen
+  // visibles aquí (y en Hoy) aunque ya hayan terminado.
+  partidos = partidos.filter(p => p.estado !== 'finalizado' || esHoy(p.fecha_hora));
 
   if (partidos.length === 0)
     return <p className="opacity-60 text-center py-16">No hay partidos próximos.</p>;
 
-  function valorDe(p: Partido) {
+  function valorDe(p: Partido): Edit {
     const e = edits[p.id];
     if (e) return e;
     const pr = predicciones.find(x => x.partido_id === p.id && x.usuario === usuario);
-    return { gl: pr?.gol_local ?? 0, gv: pr?.gol_visitante ?? 0 };
+    // sin predicción guardada => null (no 0), para no confundir "sin jugar" con "0-0".
+    return pr ? { gl: pr.gol_local, gv: pr.gol_visitante } : { gl: null, gv: null };
   }
 
   const mostrados = partidos.slice(0, visibles);
+  // solo se pueden guardar predicciones completas (ambos marcadores) y no bloqueadas.
   const pendientes = Object.keys(edits).filter(id => {
     const p = partidos.find(x => x.id === id);
-    return p && !estaBloqueado(p.fecha_hora);
+    const e = edits[id];
+    return p && !estaBloqueado(p.fecha_hora) && e.gl !== null && e.gv !== null;
   });
 
   async function guardarTodo() {
     if (pendientes.length === 0 || guardando) return;
     setGuardando(true);
     try {
-      const items = pendientes.map(id => ({ partido_id: id, gol_local: edits[id].gl, gol_visitante: edits[id].gv }));
+      const items = pendientes.map(id => ({ partido_id: id, gol_local: edits[id].gl!, gol_visitante: edits[id].gv! }));
       onSavedMany(await guardarPredicciones(items, usuario));
       setEdits({});
     } finally { setGuardando(false); }

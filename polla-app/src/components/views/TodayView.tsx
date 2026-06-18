@@ -1,10 +1,6 @@
 import PartidosView from './PartidosView';
+import { esHoy } from '../../lib/torneo';
 import type { Partido, Prediccion, Usuario } from '../../types';
-
-function esHoy(iso: string): boolean {
-  const d = new Date(iso), n = new Date();
-  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
-}
 
 export default function TodayView(props:
   { partidos: Partido[]; predicciones: Prediccion[]; usuario: Usuario; onSavedMany: (p: Prediccion[]) => void }) {

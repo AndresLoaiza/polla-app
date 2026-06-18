@@ -22,9 +22,14 @@ export function calcularTabla(
   const finalizados = partidos.filter(
     p => p.estado === 'finalizado' && p.gol_local_real !== null && p.gol_visitante_real !== null,
   );
+  // Solo cuentan los partidos que ambos predijeron: si a alguno le falta, no
+  // se puntua para ninguno (no seria justo comparar contra una no-prediccion).
+  const computables = finalizados.filter(
+    p => USUARIOS.every(u => predicciones.some(x => x.partido_id === p.id && x.usuario === u)),
+  );
   const filas: FilaTabla[] = USUARIOS.map(usuario => {
     let total = 0, plenos = 0, p7 = 0, p6 = 0, p5 = 0;
-    for (const partido of finalizados) {
+    for (const partido of computables) {
       const pr = predicciones.find(x => x.partido_id === partido.id && x.usuario === usuario);
       if (!pr) continue;
       const d = puntuar(pr.gol_local, pr.gol_visitante, partido.gol_local_real!, partido.gol_visitante_real!, partido.fase);
