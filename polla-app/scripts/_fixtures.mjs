@@ -7,6 +7,19 @@ const faseDe = (stage) => (stage === 'GROUP_STAGE' ? 'grupos' : 'eliminacion');
 const estadoDe = (s) =>
   s === 'FINISHED' ? 'finalizado' : (s === 'IN_PLAY' || s === 'PAUSED') ? 'en_juego' : 'programado';
 
+async function fetchConRetry(url, opts, intentos = 3) {
+  for (let i = 0; i < intentos; i++) {
+    try {
+      return await fetch(url, opts);
+    } catch (err) {
+      if (i === intentos - 1) throw err;
+      const espera = 5000 * (i + 1);
+      console.warn(`fetch falló (intento ${i + 1}/${intentos}): ${err.message}. Reintentando en ${espera / 1000}s…`);
+      await new Promise(r => setTimeout(r, espera));
+    }
+  }
+}
+
 export async function sincronizarFixtures() {
   const { FOOTBALL_DATA_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env;
   if (!FOOTBALL_DATA_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -14,7 +27,7 @@ export async function sincronizarFixtures() {
   }
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
+  const res = await fetchConRetry('https://api.football-data.org/v4/competitions/WC/matches', {
     headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN },
   });
   if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);

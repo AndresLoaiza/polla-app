@@ -31,14 +31,14 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
   const restante = msAlCierre(partido.fecha_hora);
   const cierraPronto = restante > 0 && restante <= AVISO_MS;
   return (
-    <GlassCard className="p-4" style={tocado ? { boxShadow: `0 0 0 1.5px ${color}` } : undefined}>
-      <div className="flex items-center justify-between text-xs opacity-70 mb-3">
+    <GlassCard className="p-3" style={tocado ? { boxShadow: `0 0 0 1.5px ${color}` } : undefined}>
+      <div className="flex items-center justify-between text-xs opacity-70 mb-2">
         <span>{partido.grupo ? `Grupo ${partido.grupo}` : 'Eliminación'}</span>
         <span>{fmtHora(partido.fecha_hora)}</span>
       </div>
 
       {cierraPronto && (
-        <div className="flex items-center justify-center gap-1.5 mb-3 rounded-lg py-1.5 px-2
+        <div className="flex items-center justify-center gap-1.5 mb-2 rounded-lg py-1 px-2
           text-xs font-bold text-red-100 bg-red-500/25 ring-1 ring-red-500/60">
           <AlertTriangle className="w-3.5 h-3.5" />
           ¡La edición se cierra en {fmtRestante(restante)}!
@@ -48,7 +48,7 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
       <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
         <ColumnaEquipo nombre={partido.equipo_local} value={gl} color={color}
           onChange={n => onChange(n, gv)} />
-        <span className="pb-1.5 text-lg opacity-40">:</span>
+        <span className="pb-1.5 text-base opacity-40">:</span>
         <ColumnaEquipo nombre={partido.equipo_visitante} value={gv} color={color}
           onChange={n => onChange(gl, n)} />
       </div>
@@ -59,10 +59,10 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
 function ColumnaEquipo({ nombre, value, color, onChange }:
   { nombre: string; value: number | null; color: string; onChange: (n: number) => void }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex flex-col items-center justify-end gap-1 min-h-[3.4rem]">
-        <span className="text-2xl leading-none">{bandera(nombre)}</span>
-        <span className="text-sm font-semibold text-center leading-tight">{nombreEs(nombre)}</span>
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex flex-col items-center justify-end gap-0.5 min-h-[2.6rem]">
+        <span className="text-xl leading-none">{bandera(nombre)}</span>
+        <span className="text-xs font-semibold text-center leading-tight">{nombreEs(nombre)}</span>
       </div>
       <ScoreInput value={value} onChange={onChange} color={color} />
     </div>

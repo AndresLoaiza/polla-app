@@ -10,18 +10,19 @@ const OTRO: Record<Usuario, Usuario> = { andres: 'melisa', melisa: 'andres' };
 function FilaDesglose({ p, partido, usuario }:
   { p?: Prediccion; partido: Partido; usuario: Usuario }) {
   const color = USER_COLOR[usuario];
-  if (!p) return <p className="opacity-50 text-sm py-1">{USER_NOMBRE[usuario]} no predijo</p>;
   const finalizado = partido.gol_local_real !== null && partido.gol_visitante_real !== null;
-  const d = finalizado
+  const d = p && finalizado
     ? puntuar(p.gol_local, p.gol_visitante, partido.gol_local_real!, partido.gol_visitante_real!, partido.fase)
     : null;
   return (
-    <div className="flex items-center justify-between py-1">
+    <div className="grid grid-cols-[5rem_4.5rem_1fr] items-center py-1 gap-1">
       <span style={{ color }} className="font-semibold">{USER_NOMBRE[usuario]}</span>
-      <span className="tabular-nums">{p.gol_local} : {p.gol_visitante}</span>
+      <span className="tabular-nums text-center">
+        {p ? `${p.gol_local} : ${p.gol_visitante}` : <span className="opacity-40 text-sm">—</span>}
+      </span>
       {d && (
-        <span className="text-sm opacity-80">
-          {d.total} pts ({d.resultado}+{d.golLocal}+{d.golVisitante}+{d.diferencia})
+        <span className="text-xs opacity-80 text-right">
+          {d.total}pts ({d.resultado}+{d.golLocal}+{d.golVisitante}+{d.diferencia})
         </span>
       )}
     </div>

@@ -74,12 +74,13 @@ export default function Shell({ usuario, partidos, predicciones, especiales, cam
       {tab === 'tabla' && <StandingsView partidos={partidos} predicciones={predicciones}
         especiales={especiales} campeonReal={campeonReal} usuario={usuario} onSavedEspecial={onSavedEspecial} />}
 
-      <nav className="fixed bottom-0 inset-x-0 glass border-t border-white/10 flex justify-around py-2">
+      <nav className="fixed bottom-0 inset-x-0 glass border-t border-white/10 flex justify-around pt-3"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className="flex flex-col items-center gap-0.5 px-3 py-1 transition-opacity"
+            className="flex flex-col items-center gap-1 px-4 py-1 transition-opacity"
             style={{ opacity: tab === t.id ? 1 : 0.5, color: tab === t.id ? 'var(--color-pitch)' : undefined }}>
-            <t.icon className="w-5 h-5" /><span className="text-xs">{t.label}</span>
+            <t.icon className="w-6 h-6" /><span className="text-xs font-medium">{t.label}</span>
           </button>
         ))}
       </nav>
