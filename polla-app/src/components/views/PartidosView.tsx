@@ -74,7 +74,7 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
       )}
 
       {pendientes.length > 0 && (
-        <div className="fixed bottom-20 inset-x-0 px-4">
+        <div className="fixed inset-x-0 px-4" style={{ bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className="max-w-lg mx-auto">
             <button onClick={guardarTodo} disabled={guardando}
               className="glass w-full rounded-xl py-3 font-bold flex items-center justify-center gap-2"
