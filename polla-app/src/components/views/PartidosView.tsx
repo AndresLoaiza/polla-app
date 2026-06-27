@@ -67,7 +67,7 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
         const v = valorDe(partido);
         return (
           <PartidoRow key={partido.id} partido={partido} gl={v.gl} gv={v.gv} usuario={usuario}
-            tocado={!!edits[partido.id]}
+            tocado={!!edits[partido.id]} predicciones={predicciones}
             onChange={(gl, gv) => setEdits(prev => ({ ...prev, [partido.id]: { gl: gl ?? 0, gv: gv ?? 0 } }))} />
         );
       })}
