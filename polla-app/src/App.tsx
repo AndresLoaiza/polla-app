@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AccessGate from './components/gate/AccessGate';
 import Shell from './components/shell/Shell';
 import BackgroundFx from './components/fx/BackgroundFx';
 import { getStoredUsuario } from './lib/identity';
 import { fetchPartidos, fetchPredicciones, fetchEspeciales, fetchCampeonReal } from './lib/db';
 import type { Partido, Prediccion, Especial, Usuario } from './types';
+
+// Refresco automatico de datos en segundo plano. El sync de resultados corre
+// cada 15 min; 2 min mantiene la app al dia sin recargar a mano.
+const REFRESH_MS = 2 * 60 * 1000;
 
 export default function App() {
   const [usuario, setUsuario] = useState<Usuario | null>(getStoredUsuario());
@@ -14,12 +18,30 @@ export default function App() {
   const [campeonReal, setCampeonReal] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
+  const cargarDatos = useCallback(async () => {
+    const [pa, pr, es, cr] = await Promise.all(
+      [fetchPartidos(), fetchPredicciones(), fetchEspeciales(), fetchCampeonReal()]);
+    setPartidos(pa); setPredicciones(pr); setEspeciales(es); setCampeonReal(cr);
+  }, []);
+
   useEffect(() => {
     if (!usuario) return;
-    Promise.all([fetchPartidos(), fetchPredicciones(), fetchEspeciales(), fetchCampeonReal()])
-      .then(([pa, pr, es, cr]) => { setPartidos(pa); setPredicciones(pr); setEspeciales(es); setCampeonReal(cr); })
-      .finally(() => setCargando(false));
-  }, [usuario]);
+    cargarDatos().catch(() => {}).finally(() => setCargando(false));
+
+    // Refresco silencioso: por intervalo y al volver a la app (foco/visibilidad),
+    // solo si la pestana esta visible. Los errores se ignoran para no romper la UI.
+    const refrescar = () => {
+      if (document.visibilityState === 'visible') cargarDatos().catch(() => {});
+    };
+    const id = setInterval(refrescar, REFRESH_MS);
+    document.addEventListener('visibilitychange', refrescar);
+    window.addEventListener('focus', refrescar);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', refrescar);
+      window.removeEventListener('focus', refrescar);
+    };
+  }, [usuario, cargarDatos]);
 
   function onSavedEspecial(e: Especial) {
     setEspeciales(prev => {
