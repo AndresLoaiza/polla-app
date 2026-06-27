@@ -1,10 +1,11 @@
 import { AlertTriangle } from 'lucide-react';
 import GlassCard from '../glass/GlassCard';
 import ScoreInput from './ScoreInput';
+import EstadoGuardado from './EstadoGuardado';
 import { msAlCierre } from '../../lib/lock';
 import { nombreEs, bandera } from '../../lib/equipos';
 import { USER_COLOR } from '../../lib/identity';
-import type { Partido, Usuario } from '../../types';
+import type { Partido, Prediccion, Usuario } from '../../types';
 
 // avisar en rojo cuando falte 1h o menos para que se cierre la edición.
 const AVISO_MS = 60 * 60 * 1000;
@@ -24,9 +25,9 @@ function fmtRestante(ms: number): string {
 
 /** Fila editable. Cada equipo es una columna: bandera + nombre centrados
  *  directamente encima de su propio marcador. */
-export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange }:
+export default function PartidoRow({ partido, gl, gv, usuario, tocado, predicciones, onChange }:
   { partido: Partido; gl: number | null; gv: number | null; usuario: Usuario; tocado: boolean;
-    onChange: (gl: number | null, gv: number | null) => void }) {
+    predicciones: Prediccion[]; onChange: (gl: number | null, gv: number | null) => void }) {
   const color = USER_COLOR[usuario];
   const restante = msAlCierre(partido.fecha_hora);
   const cierraPronto = restante > 0 && restante <= AVISO_MS;
@@ -51,6 +52,10 @@ export default function PartidoRow({ partido, gl, gv, usuario, tocado, onChange 
         <span className="pb-1.5 text-base opacity-40">:</span>
         <ColumnaEquipo nombre={partido.equipo_visitante} value={gv} color={color}
           onChange={n => onChange(gl, n)} />
+      </div>
+
+      <div className="mt-3 pt-2 border-t border-white/10">
+        <EstadoGuardado partidoId={partido.id} predicciones={predicciones} />
       </div>
     </GlassCard>
   );

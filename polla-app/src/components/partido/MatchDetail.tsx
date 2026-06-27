@@ -1,4 +1,5 @@
 import GlassCard from '../glass/GlassCard';
+import EstadoGuardado from './EstadoGuardado';
 import { rivalRevelado } from '../../lib/lock';
 import { puntuar } from '../../lib/scoring';
 import { nombreEs, bandera } from '../../lib/equipos';
@@ -50,6 +51,9 @@ export default function MatchDetail({ partido, predicciones, usuario }:
               <div className="opacity-60 text-sm mt-1">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>
               <div className="opacity-40 text-xs mt-0.5">Edición cerrada</div>
             </>}
+      </div>
+      <div className="mb-2 pb-2 border-b border-white/10">
+        <EstadoGuardado partidoId={partido.id} predicciones={predicciones} />
       </div>
       <FilaDesglose p={mia} partido={partido} usuario={usuario} />
       {revelado
