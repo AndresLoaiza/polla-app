@@ -28,7 +28,7 @@ npm run build    # tsc && vite build (genera dist/ + sw.js)
 - Frontend estático en Pages lee/escribe en Supabase (anon key, tras gate).
 - 3 GitHub Actions (`.github/workflows/` en la **raíz** del repo, no en `polla-app/`):
   - `deploy.yml` — push a `main` → build → Pages.
-  - `sync.yml` — cron 2h: jala resultados de football-data.org → `polla_partidos`.
+  - `sync.yml` — cron 15min: jala resultados de football-data.org → `polla_partidos`.
   - `recordatorios.yml` — cron 30min: Web Push a quien le falte predecir un
     partido que cierra en <3h (`scripts/enviar-recordatorios.mjs`).
 
