@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, ChevronDown } from 'lucide-react';
+import { Save, ChevronDown, AlertTriangle } from 'lucide-react';
 import PartidoRow from '../partido/PartidoRow';
 import MatchDetail from '../partido/MatchDetail';
 import { estaBloqueado } from '../../lib/lock';
@@ -18,6 +18,7 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
   const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [visibles, setVisibles] = useState(PAGINA);
   const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Los de hoy viven en la pestaña "Hoy": en "Partidos" se excluyen (excluirHoy).
   // El resto, los finalizados van a "Jugados".
@@ -46,10 +47,15 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
   async function guardarTodo() {
     if (pendientes.length === 0 || guardando) return;
     setGuardando(true);
+    setError(null);
     try {
       const items = pendientes.map(id => ({ partido_id: id, gol_local: edits[id].gl!, gol_visitante: edits[id].gv! }));
       onSavedMany(await guardarPredicciones(items, usuario));
       setEdits({});
+    } catch (e) {
+      // No tragarse el error: si Supabase rechaza (RLS, red, constraint) hay que
+      // avisar, si no el usuario cree que guardo y no fue asi.
+      setError(e instanceof Error ? e.message : 'No se pudo guardar. Reintenta.');
     } finally { setGuardando(false); }
   }
 
@@ -76,6 +82,13 @@ export default function PartidosView({ partidos, predicciones, usuario, onSavedM
       {pendientes.length > 0 && (
         <div className="fixed inset-x-0 px-4" style={{ bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className="max-w-lg mx-auto">
+            {error && (
+              <div className="mb-2 flex items-center justify-center gap-1.5 rounded-lg py-1.5 px-3
+                text-xs font-bold text-red-100 bg-red-500/25 ring-1 ring-red-500/60">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                No se guardó: {error}
+              </div>
+            )}
             <button onClick={guardarTodo} disabled={guardando}
               className="glass w-full rounded-xl py-3 font-bold flex items-center justify-center gap-2"
               style={{ boxShadow: `0 0 0 2px ${USER_COLOR[usuario]}` }}>
