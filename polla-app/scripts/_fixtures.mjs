@@ -7,6 +7,16 @@ const faseDe = (stage) => (stage === 'GROUP_STAGE' ? 'grupos' : 'eliminacion');
 const estadoDe = (s) =>
   s === 'FINISHED' ? 'finalizado' : (s === 'IN_PLAY' || s === 'PAUSED') ? 'en_juego' : 'programado';
 
+// El marcador del partido son los goles en juego (90' + prorroga), NUNCA la
+// tanda de penales que decide quien avanza. football-data deja el empate previo
+// a la tanda en extraTime/regularTime; su fullTime puede traer los penales
+// sumados segun la competencia, asi que cuando hubo tanda no usamos fullTime.
+const marcadorEnJuego = (sc) => {
+  if (!sc) return {};
+  const huboPenales = sc.duration === 'PENALTY_SHOOTOUT' || sc.penalties != null;
+  return huboPenales ? (sc.extraTime ?? sc.regularTime ?? sc.fullTime ?? {}) : (sc.fullTime ?? {});
+};
+
 async function fetchConRetry(url, opts, intentos = 3) {
   for (let i = 0; i < intentos; i++) {
     try {
@@ -35,19 +45,41 @@ export async function sincronizarFixtures() {
 
   const filas = matches
     .filter((m) => new Date(m.utcDate) >= new Date('2026-06-16T00:00:00Z'))
-    .map((m) => ({
-      ext_id: String(m.id),
-      fase: faseDe(m.stage),
-      grupo: m.group ? m.group.replace('GROUP_', '') : null,
-      fecha_hora: m.utcDate,
-      equipo_local: m.homeTeam?.name ?? 'Por definir',
-      equipo_visitante: m.awayTeam?.name ?? 'Por definir',
-      bandera_local: m.homeTeam?.crest ?? null,
-      bandera_visitante: m.awayTeam?.crest ?? null,
-      gol_local_real: m.score?.fullTime?.home ?? null,
-      gol_visitante_real: m.score?.fullTime?.away ?? null,
-      estado: estadoDe(m.status),
-    }));
+    .map((m) => {
+      const mr = marcadorEnJuego(m.score);
+      return {
+        ext_id: String(m.id),
+        fase: faseDe(m.stage),
+        grupo: m.group ? m.group.replace('GROUP_', '') : null,
+        fecha_hora: m.utcDate,
+        equipo_local: m.homeTeam?.name ?? 'Por definir',
+        equipo_visitante: m.awayTeam?.name ?? 'Por definir',
+        bandera_local: m.homeTeam?.crest ?? null,
+        bandera_visitante: m.awayTeam?.crest ?? null,
+        gol_local_real: mr.home ?? null,
+        gol_visitante_real: mr.away ?? null,
+        estado: estadoDe(m.status),
+      };
+    });
+
+  // Diagnostico: deja claro en el log que devuelve la API y que queda tras el
+  // filtro, para detectar si faltan partidos futuros (p. ej. limite del plan
+  // free) o si solo estan como "Por definir" (bracket aun sin resolver).
+  const ahora = new Date();
+  const cuenta = (arr, fn) => arr.reduce((acc, x) => { const k = fn(x); acc[k] = (acc[k] ?? 0) + 1; return acc; }, {});
+  const futuros = filas.filter((f) => new Date(f.fecha_hora) > ahora);
+  const fechas = filas.map((f) => f.fecha_hora).sort();
+  const porDefinir = filas.filter((f) => f.equipo_local === 'Por definir' || f.equipo_visitante === 'Por definir').length;
+  console.log(`API total: ${matches.length} | tras filtro (>=2026-06-16): ${filas.length}`);
+  console.log(`Por fase: ${JSON.stringify(cuenta(filas, (f) => f.fase))}`);
+  console.log(`Por estado: ${JSON.stringify(cuenta(filas, (f) => f.estado))}`);
+  console.log(`Futuros (fecha > ahora): ${futuros.length} | con "Por definir": ${porDefinir}`);
+  console.log(`Rango fechas: ${fechas[0] ?? 'n/a'} -> ${fechas[fechas.length - 1] ?? 'n/a'}`);
+  const conPenales = matches.filter((m) => m.score?.penalties != null || m.score?.duration === 'PENALTY_SHOOTOUT');
+  for (const m of conPenales) {
+    const mr = marcadorEnJuego(m.score);
+    console.log(`Penales: ${m.homeTeam?.name} vs ${m.awayTeam?.name} | marcador en juego ${mr.home}-${mr.away} | tanda ${m.score?.penalties?.home}-${m.score?.penalties?.away} (no cuenta)`);
+  }
 
   // Diagnostico: deja claro en el log que devuelve la API y que queda tras el
   // filtro, para detectar si faltan partidos futuros (p. ej. limite del plan
