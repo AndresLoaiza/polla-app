@@ -36,6 +36,7 @@ export default function MatchDetail({ partido, predicciones, usuario }:
   const delOtro = predicciones.find(p => p.partido_id === partido.id && p.usuario === OTRO[usuario]);
   const revelado = rivalRevelado(partido.fecha_hora);
   const finalizado = partido.estado === 'finalizado';
+  const enJuego = partido.estado === 'en_juego';
 
   return (
     <GlassCard className="p-4">
@@ -47,10 +48,21 @@ export default function MatchDetail({ partido, predicciones, usuario }:
         </div>
         {finalizado
           ? <div className="text-2xl font-bold tabular-nums mt-1">{partido.gol_local_real} : {partido.gol_visitante_real}</div>
-          : <>
-              <div className="opacity-60 text-sm mt-1">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>
-              <div className="opacity-40 text-xs mt-0.5">Edición cerrada</div>
-            </>}
+          : enJuego
+            ? <>
+                <div className="text-2xl font-bold tabular-nums mt-1">{partido.gol_local_real ?? 0} : {partido.gol_visitante_real ?? 0}</div>
+                <div className="mt-0.5 inline-flex items-center gap-1.5 text-xs font-bold text-red-100">
+                  <span className="relative flex h-2 w-2" aria-hidden>
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                  </span>
+                  EN VIVO · parcial
+                </div>
+              </>
+            : <>
+                <div className="opacity-60 text-sm mt-1">{new Date(partido.fecha_hora).toLocaleString('es-CO')}</div>
+                <div className="opacity-40 text-xs mt-0.5">Edición cerrada</div>
+              </>}
       </div>
       <div className="mb-2 pb-2 border-b border-white/10">
         <EstadoGuardado partidoId={partido.id} predicciones={predicciones} />
