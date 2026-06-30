@@ -19,6 +19,21 @@ node scripts/seed-partidos.mjs     # carga inicial
 node scripts/sync-resultados.mjs   # actualizar marcadores
 ```
 
+## Marcadores en vivo (Edge Function)
+La app muestra el marcador parcial casi en tiempo real consultando una Edge
+Function que hace de proxy a football-data (el token no puede ir en el cliente).
+Deploy una sola vez (Supabase CLI logueado en el proyecto, desde `polla-app/`):
+```
+supabase secrets set FOOTBALL_DATA_TOKEN=<token>
+supabase functions deploy marcadores-vivo
+```
+Código en `supabase/functions/marcadores-vivo/`. La app la invoca cada 30 s solo
+mientras hay un partido en juego; si no está desplegada, degrada en silencio al
+refresco normal (cron 15 min + auto-refresh 2 min). Probar:
+```
+curl -s -H "Authorization: Bearer <ANON_KEY>" https://<PROYECTO>.functions.supabase.co/marcadores-vivo
+```
+
 ## Definir el campeón real (al terminar el torneo)
 Resuelve la apuesta especial (+20 a quien acertó). En SQL editor de Supabase:
 ```sql
