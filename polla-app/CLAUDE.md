@@ -31,6 +31,10 @@ npm run build    # tsc && vite build (genera dist/ + sw.js)
   - `sync.yml` — cron 15min: jala resultados de football-data.org → `polla_partidos`.
   - `recordatorios.yml` — cron 30min: Web Push a quien le falte predecir un
     partido que cierra en <3h (`scripts/enviar-recordatorios.mjs`).
+- Edge Function `supabase/functions/marcadores-vivo/` — proxy a football-data
+  (token server-side). La app la invoca cada 30s **solo si hay partido en juego**
+  para el marcador en vivo; degrada en silencio si no está desplegada. Deploy y
+  secret en `RUNBOOK.md`.
 
 ## Datos (Supabase, prefijo `polla_`)
 - `polla_partidos` — fixtures + marcadores reales. `fase` = `grupos`|`eliminacion`.
