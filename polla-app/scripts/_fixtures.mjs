@@ -81,20 +81,6 @@ export async function sincronizarFixtures() {
     console.log(`Penales: ${m.homeTeam?.name} vs ${m.awayTeam?.name} | marcador en juego ${mr.home}-${mr.away} | tanda ${m.score?.penalties?.home}-${m.score?.penalties?.away} (no cuenta)`);
   }
 
-  // Diagnostico: deja claro en el log que devuelve la API y que queda tras el
-  // filtro, para detectar si faltan partidos futuros (p. ej. limite del plan
-  // free) o si solo estan como "Por definir" (bracket aun sin resolver).
-  const ahora = new Date();
-  const cuenta = (arr, fn) => arr.reduce((acc, x) => { const k = fn(x); acc[k] = (acc[k] ?? 0) + 1; return acc; }, {});
-  const futuros = filas.filter((f) => new Date(f.fecha_hora) > ahora);
-  const fechas = filas.map((f) => f.fecha_hora).sort();
-  const porDefinir = filas.filter((f) => f.equipo_local === 'Por definir' || f.equipo_visitante === 'Por definir').length;
-  console.log(`API total: ${matches.length} | tras filtro (>=2026-06-16): ${filas.length}`);
-  console.log(`Por fase: ${JSON.stringify(cuenta(filas, (f) => f.fase))}`);
-  console.log(`Por estado: ${JSON.stringify(cuenta(filas, (f) => f.estado))}`);
-  console.log(`Futuros (fecha > ahora): ${futuros.length} | con "Por definir": ${porDefinir}`);
-  console.log(`Rango fechas: ${fechas[0] ?? 'n/a'} -> ${fechas[fechas.length - 1] ?? 'n/a'}`);
-
   const { error } = await supabase.from('polla_partidos').upsert(filas, { onConflict: 'ext_id' });
   if (error) throw error;
   return filas.length;
