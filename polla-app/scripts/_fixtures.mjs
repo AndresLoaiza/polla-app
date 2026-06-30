@@ -7,12 +7,16 @@ const faseDe = (stage) => (stage === 'GROUP_STAGE' ? 'grupos' : 'eliminacion');
 const estadoDe = (s) =>
   s === 'FINISHED' ? 'finalizado' : (s === 'IN_PLAY' || s === 'PAUSED') ? 'en_juego' : 'programado';
 
-// El marcador del partido = score.fullTime. En la API v4 fullTime ya es el
-// resultado en juego (90' + prorroga) y NO incluye la tanda de penales, que
-// vive aparte en score.penalties. Asi un 1-1 definido por penales se guarda
-// como 1-1. (No usar regularTime/extraTime: el feed deja regularTime en 0-0 si
-// los goles cayeron en la prorroga y no siempre llena extraTime.)
-const marcadorEnJuego = (sc) => sc?.fullTime ?? {};
+// El marcador del partido son los goles en juego, NO la tanda de penales que
+// decide quien avanza. Dato real del feed (Alemania-Paraguay): para un partido
+// por penales, score.fullTime trae la tanda SUMADA (p. ej. 4-5), y el resultado
+// real esta en score.regularTime (1-1). Por eso, con tanda usamos regularTime;
+// sin tanda, fullTime ya es el resultado final (incluye goles de prorroga).
+const marcadorEnJuego = (sc) => {
+  if (!sc) return {};
+  const huboPenales = sc.duration === 'PENALTY_SHOOTOUT' || sc.penalties != null;
+  return huboPenales ? (sc.regularTime ?? sc.fullTime ?? {}) : (sc.fullTime ?? {});
+};
 
 async function fetchConRetry(url, opts, intentos = 3) {
   for (let i = 0; i < intentos; i++) {
