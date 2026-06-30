@@ -7,15 +7,12 @@ const faseDe = (stage) => (stage === 'GROUP_STAGE' ? 'grupos' : 'eliminacion');
 const estadoDe = (s) =>
   s === 'FINISHED' ? 'finalizado' : (s === 'IN_PLAY' || s === 'PAUSED') ? 'en_juego' : 'programado';
 
-// El marcador del partido son los goles en juego (90' + prorroga), NUNCA la
-// tanda de penales que decide quien avanza. football-data deja el empate previo
-// a la tanda en extraTime/regularTime; su fullTime puede traer los penales
-// sumados segun la competencia, asi que cuando hubo tanda no usamos fullTime.
-const marcadorEnJuego = (sc) => {
-  if (!sc) return {};
-  const huboPenales = sc.duration === 'PENALTY_SHOOTOUT' || sc.penalties != null;
-  return huboPenales ? (sc.extraTime ?? sc.regularTime ?? sc.fullTime ?? {}) : (sc.fullTime ?? {});
-};
+// El marcador del partido = score.fullTime. En la API v4 fullTime ya es el
+// resultado en juego (90' + prorroga) y NO incluye la tanda de penales, que
+// vive aparte en score.penalties. Asi un 1-1 definido por penales se guarda
+// como 1-1. (No usar regularTime/extraTime: el feed deja regularTime en 0-0 si
+// los goles cayeron en la prorroga y no siempre llena extraTime.)
+const marcadorEnJuego = (sc) => sc?.fullTime ?? {};
 
 async function fetchConRetry(url, opts, intentos = 3) {
   for (let i = 0; i < intentos; i++) {
@@ -77,8 +74,9 @@ export async function sincronizarFixtures() {
   console.log(`Rango fechas: ${fechas[0] ?? 'n/a'} -> ${fechas[fechas.length - 1] ?? 'n/a'}`);
   const conPenales = matches.filter((m) => m.score?.penalties != null || m.score?.duration === 'PENALTY_SHOOTOUT');
   for (const m of conPenales) {
-    const mr = marcadorEnJuego(m.score);
-    console.log(`Penales: ${m.homeTeam?.name} vs ${m.awayTeam?.name} | marcador en juego ${mr.home}-${mr.away} | tanda ${m.score?.penalties?.home}-${m.score?.penalties?.away} (no cuenta)`);
+    const s = m.score ?? {};
+    const par = (x) => `${x?.home ?? '-'}-${x?.away ?? '-'}`;
+    console.log(`Penales ${m.homeTeam?.name} vs ${m.awayTeam?.name}: marcador(fullTime) ${par(s.fullTime)} | regularTime ${par(s.regularTime)} | extraTime ${par(s.extraTime)} | tanda ${par(s.penalties)} (no cuenta)`);
   }
 
   const { error } = await supabase.from('polla_partidos').upsert(filas, { onConflict: 'ext_id' });
