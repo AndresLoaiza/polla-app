@@ -21,12 +21,34 @@ export default function App() {
   const [especiales, setEspeciales] = useState<Especial[]>([]);
   const [campeonReal, setCampeonReal] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [refrescando, setRefrescando] = useState(false);
 
   const cargarDatos = useCallback(async () => {
     const [pa, pr, es, cr] = await Promise.all(
       [fetchPartidos(), fetchPredicciones(), fetchEspeciales(), fetchCampeonReal()]);
     setPartidos(pa); setPredicciones(pr); setEspeciales(es); setCampeonReal(cr);
   }, []);
+
+  // Marcadores en vivo (Edge Function): fusiona parcial Y estado por ext_id, asi
+  // un partido que arranca aparece "en vivo" sin esperar al cron. Silencioso.
+  const traerVivo = useCallback(async () => {
+    try {
+      const vivos = await fetchMarcadoresVivo();
+      if (vivos.length === 0) return;
+      const porExt = new Map(vivos.map(v => [v.ext_id, v]));
+      setPartidos(prev => prev.map(p => {
+        const v = porExt.get(p.ext_id);
+        return v ? { ...p, gol_local_real: v.gol_local, gol_visitante_real: v.gol_visitante, estado: v.estado } : p;
+      }));
+    } catch { /* silencioso: queda el refresco normal */ }
+  }, []);
+
+  const refrescarManual = useCallback(async () => {
+    setRefrescando(true);
+    try { await cargarDatos(); await traerVivo(); }
+    catch { /* silencioso */ }
+    finally { setRefrescando(false); }
+  }, [cargarDatos, traerVivo]);
 
   useEffect(() => {
     if (!usuario) return;
@@ -47,28 +69,25 @@ export default function App() {
     };
   }, [usuario, cargarDatos]);
 
-  // Marcador en vivo: mientras haya un partido en juego, poll a la Edge Function
-  // cada 30s y fusiona los parciales por ext_id. Degradacion silenciosa: si la
-  // función no está desplegada o falla, queda el refresco normal.
-  const hayEnJuego = partidos.some(p => p.estado === 'en_juego');
+  // Poll de marcador en vivo cada 30s si hay (o podria haber) un partido en curso:
+  // ya en_juego, o con horario ya iniciado y sin finalizar dentro de una ventana
+  // de ~3.5h (90'+prorroga+penales+margen). Asi descubrimos partidos recien
+  // arrancados antes de que el cron los marque.
+  const VENTANA_VIVO_MS = 3.5 * 60 * 60 * 1000;
+  const ahoraMs = Date.now();
+  const hayVivoPosible = partidos.some(p => {
+    if (p.estado === 'finalizado') return false;
+    if (p.estado === 'en_juego') return true;
+    const inicio = new Date(p.fecha_hora).getTime();
+    return inicio <= ahoraMs && ahoraMs - inicio < VENTANA_VIVO_MS;
+  });
   useEffect(() => {
-    if (!usuario || !hayEnJuego) return;
-    let activo = true;
-    const tick = async () => {
-      try {
-        const vivos = await fetchMarcadoresVivo();
-        if (!activo || vivos.length === 0) return;
-        const porExt = new Map(vivos.map(v => [v.ext_id, v]));
-        setPartidos(prev => prev.map(p => {
-          const v = porExt.get(p.ext_id);
-          return v ? { ...p, gol_local_real: v.gol_local, gol_visitante_real: v.gol_visitante } : p;
-        }));
-      } catch { /* silencioso */ }
-    };
+    if (!usuario || !hayVivoPosible) return;
+    const tick = () => { if (document.visibilityState === 'visible') traerVivo(); };
     tick();
-    const id = setInterval(() => { if (document.visibilityState === 'visible') tick(); }, VIVO_MS);
-    return () => { activo = false; clearInterval(id); };
-  }, [usuario, hayEnJuego]);
+    const id = setInterval(tick, VIVO_MS);
+    return () => clearInterval(id);
+  }, [usuario, hayVivoPosible, traerVivo]);
 
   function onSavedEspecial(e: Especial) {
     setEspeciales(prev => {
@@ -95,7 +114,8 @@ export default function App() {
           ? <p className="text-center py-20 opacity-60">Cargando…</p>
           : <Shell usuario={usuario} partidos={partidos} predicciones={predicciones}
               especiales={especiales} campeonReal={campeonReal}
-              onSavedMany={onSavedMany} onSavedEspecial={onSavedEspecial} />}
+              onSavedMany={onSavedMany} onSavedEspecial={onSavedEspecial}
+              onRefresh={refrescarManual} refrescando={refrescando} />}
     </>
   );
 }

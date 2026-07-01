@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, Flag, History, Trophy, HelpCircle, Bell, BellRing } from 'lucide-react';
+import { CalendarDays, Flag, History, Trophy, HelpCircle, Bell, BellRing, RefreshCw } from 'lucide-react';
 import { activarRecordatorios, estaSuscrito, type EstadoPush } from '../../lib/push';
 import TodayView from '../views/TodayView';
 import PartidosView from '../views/PartidosView';
@@ -12,9 +12,10 @@ import type { Partido, Prediccion, Especial, Usuario } from '../../types';
 
 type Tab = 'hoy' | 'partidos' | 'jugados' | 'tabla';
 
-export default function Shell({ usuario, partidos, predicciones, especiales, campeonReal, onSavedMany, onSavedEspecial }:
+export default function Shell({ usuario, partidos, predicciones, especiales, campeonReal, onSavedMany, onSavedEspecial, onRefresh, refrescando }:
   { usuario: Usuario; partidos: Partido[]; predicciones: Prediccion[]; especiales: Especial[];
-    campeonReal: string | null; onSavedMany: (p: Prediccion[]) => void; onSavedEspecial: (e: Especial) => void }) {
+    campeonReal: string | null; onSavedMany: (p: Prediccion[]) => void; onSavedEspecial: (e: Especial) => void;
+    onRefresh: () => void; refrescando: boolean }) {
   const [tab, setTab] = useState<Tab>('hoy');
   const [info, setInfo] = useState(false);
   const [suscrito, setSuscrito] = useState(false);
@@ -50,6 +51,10 @@ export default function Shell({ usuario, partidos, predicciones, especiales, cam
             <span className="text-2xl">⚽</span> Polla Mundial 2026
           </h1>
           <div className="flex items-center gap-2">
+            <button aria-label="actualizar" onClick={onRefresh} disabled={refrescando}
+              className="glass w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-60">
+              <RefreshCw className={`w-5 h-5 ${refrescando ? 'animate-spin' : ''}`} />
+            </button>
             <button aria-label="recordatorios" onClick={toggleRecordatorios}
               className="glass w-9 h-9 rounded-full flex items-center justify-center"
               style={suscrito ? { color: 'var(--color-pitch)' } : undefined}>
