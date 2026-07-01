@@ -1,22 +1,22 @@
-// Edge Function: marcadores en vivo.
+// Edge Function: marcadores.
 //
-// Proxy del lado servidor a football-data.org para no exponer el token en el
-// cliente. La app la invoca cada ~30s mientras hay un partido en juego y pinta
-// el marcador parcial casi en tiempo real (sin esperar al cron de sync).
+// Proxy del lado servidor a football-data.org para traer el estado y marcador
+// ACTUAL de todos los partidos, sin exponer el token en el cliente. La app la usa
+//   (1) al pulsar "actualizar" / pull-to-refresh, y
+//   (2) en poll cada ~30s mientras hay un partido en curso,
+// y superpone el resultado sobre lo que vino de la base. Asi "actualizar" trae el
+// marcador actual desde la fuente, no la copia (posiblemente vieja) del cron.
 //
-// Deploy (una vez, requiere Supabase CLI logueado en el proyecto):
+// Deploy (una vez, Supabase CLI logueado en el proyecto):
 //   supabase secrets set FOOTBALL_DATA_TOKEN=<token>
 //   supabase functions deploy marcadores-vivo
 //
-// Se llama desde el cliente con supabase.functions.invoke('marcadores-vivo'),
-// que adjunta la anon key como Authorization (mismo gate que el resto de la app).
-//
-// Devuelve: { partidos: [{ ext_id, gol_local, gol_visitante, estado }] } solo de
-// los partidos en juego. El marcador es score.fullTime (la tanda de penales no
-// aplica mientras el partido sigue en curso).
+// Se invoca con supabase.functions.invoke('marcadores-vivo') (adjunta la anon key).
+// Devuelve: { partidos: [{ ext_id, gol_local, gol_visitante, estado }] }.
 
-interface Score { fullTime?: { home: number | null; away: number | null } }
-interface Match { id: number; status: string; score?: Score }
+interface Cuadro { home: number | null; away: number | null }
+interface Score { duration?: string; regularTime?: Cuadro; fullTime?: Cuadro; penalties?: Cuadro }
+interface Match { id: number; status: string; utcDate: string; score?: Score }
 
 const CORS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -27,9 +27,19 @@ const CORS: Record<string, string> = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
-// Cache corto por isolate para no golpear la cuota del plan free (10 req/min)
-// aunque ambos usuarios consulten a la vez.
-const TTL_MS = 15_000;
+const estadoDe = (s: string) =>
+  s === 'FINISHED' ? 'finalizado' : (s === 'IN_PLAY' || s === 'PAUSED') ? 'en_juego' : 'programado';
+
+// Igual que el sync: la tanda de penales no cuenta en el marcador; el resultado
+// en juego esta en regularTime cuando hubo penales, si no en fullTime.
+const marcador = (sc?: Score): Cuadro => {
+  if (!sc) return { home: null, away: null };
+  const huboPenales = sc.duration === 'PENALTY_SHOOTOUT' || sc.penalties != null;
+  return (huboPenales ? (sc.regularTime ?? sc.fullTime) : sc.fullTime) ?? { home: null, away: null };
+};
+
+const DESDE = new Date('2026-06-16T00:00:00Z');
+const TTL_MS = 10_000;   // cache corto por isolate para cuidar la cuota (10 req/min)
 let cache: { ts: number; body: unknown } | null = null;
 
 Deno.serve(async (req: Request) => {
@@ -41,19 +51,23 @@ Deno.serve(async (req: Request) => {
   if (cache && Date.now() - cache.ts < TTL_MS) return json(cache.body);
 
   try {
-    const res = await fetch(
-      'https://api.football-data.org/v4/competitions/WC/matches?status=IN_PLAY,PAUSED',
-      { headers: { 'X-Auth-Token': token } },
-    );
+    const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
+      headers: { 'X-Auth-Token': token },
+    });
     if (!res.ok) return json({ error: `API ${res.status}` }, 502);
     const { matches = [] } = await res.json() as { matches?: Match[] };
 
-    const partidos = matches.map((m) => ({
-      ext_id: String(m.id),
-      gol_local: m.score?.fullTime?.home ?? 0,
-      gol_visitante: m.score?.fullTime?.away ?? 0,
-      estado: 'en_juego' as const,
-    }));
+    const partidos = matches
+      .filter((m) => new Date(m.utcDate) >= DESDE)
+      .map((m) => {
+        const mr = marcador(m.score);
+        return {
+          ext_id: String(m.id),
+          gol_local: mr.home ?? null,
+          gol_visitante: mr.away ?? null,
+          estado: estadoDe(m.status),
+        };
+      });
 
     const body = { partidos };
     cache = { ts: Date.now(), body };
