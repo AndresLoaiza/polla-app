@@ -32,8 +32,10 @@ npm run build    # tsc && vite build (genera dist/ + sw.js)
   - `recordatorios.yml` — cron 30min: Web Push a quien le falte predecir un
     partido que cierra en <3h (`scripts/enviar-recordatorios.mjs`).
 - Edge Function `supabase/functions/marcadores-vivo/` — proxy a football-data
-  (token server-side). La app la invoca cada 30s **solo si hay partido en juego**
-  para el marcador en vivo; degrada en silencio si no está desplegada. Deploy y
+  (token server-side). Devuelve estado+marcador **actual de todos los partidos**.
+  La app la usa al **actualizar/pull-to-refresh** (para traer lo de la fuente y no
+  la copia vieja del cron) y en poll cada 30s si hay partido en curso; los
+  superpone por `ext_id`. Degrada en silencio si no está desplegada. Deploy y
   secret en `RUNBOOK.md`.
 
 ## Datos (Supabase, prefijo `polla_`)
