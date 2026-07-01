@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import AccessGate from './components/gate/AccessGate';
 import Shell from './components/shell/Shell';
+import PullToRefresh from './components/shell/PullToRefresh';
 import BackgroundFx from './components/fx/BackgroundFx';
 import { getStoredUsuario } from './lib/identity';
 import { fetchPartidos, fetchPredicciones, fetchEspeciales, fetchCampeonReal } from './lib/db';
@@ -112,10 +113,12 @@ export default function App() {
         ? <AccessGate onUnlocked={setUsuario} />
         : cargando
           ? <p className="text-center py-20 opacity-60">Cargando…</p>
-          : <Shell usuario={usuario} partidos={partidos} predicciones={predicciones}
-              especiales={especiales} campeonReal={campeonReal}
-              onSavedMany={onSavedMany} onSavedEspecial={onSavedEspecial}
-              onRefresh={refrescarManual} refrescando={refrescando} />}
+          : <PullToRefresh onRefresh={refrescarManual}>
+              <Shell usuario={usuario} partidos={partidos} predicciones={predicciones}
+                especiales={especiales} campeonReal={campeonReal}
+                onSavedMany={onSavedMany} onSavedEspecial={onSavedEspecial}
+                onRefresh={refrescarManual} refrescando={refrescando} />
+            </PullToRefresh>}
     </>
   );
 }

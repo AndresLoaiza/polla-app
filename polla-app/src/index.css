@@ -12,10 +12,13 @@
 
 * { box-sizing: border-box; }
 
+html { overscroll-behavior-y: contain; }  /* evita el "recargar" nativo del navegador; usamos pull-to-refresh propio */
+
 body {
   margin: 0;
   font-family: var(--font-display);
   color: #f5f5fa;
+  overscroll-behavior-y: contain;
   background:
     radial-gradient(1200px 600px at 20% -10%, #14532d 0%, transparent 60%),
     radial-gradient(1000px 500px at 90% 10%, #3b0764 0%, transparent 50%),
