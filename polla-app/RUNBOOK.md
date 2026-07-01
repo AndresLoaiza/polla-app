@@ -22,7 +22,14 @@ node scripts/sync-resultados.mjs   # actualizar marcadores
 ## Marcadores en vivo (Edge Function)
 La app muestra el marcador parcial casi en tiempo real consultando una Edge
 Function que hace de proxy a football-data (el token no puede ir en el cliente).
-Deploy una sola vez (Supabase CLI logueado en el proyecto, desde `polla-app/`):
+
+Deploy **automático** (sin PC): workflow `deploy-functions.yml`. Requiere el secret
+`SUPABASE_ACCESS_TOKEN` (Supabase → Account → Access Tokens); el project ref y el
+`FOOTBALL_DATA_TOKEN` los toma de los secrets ya existentes. Correr:
+```
+gh workflow run deploy-functions.yml     # o botón "Run workflow" en GitHub
+```
+Deploy manual (Supabase CLI logueado, desde `polla-app/`):
 ```
 supabase secrets set FOOTBALL_DATA_TOKEN=<token>
 supabase functions deploy marcadores-vivo

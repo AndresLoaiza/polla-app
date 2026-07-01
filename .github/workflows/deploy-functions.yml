@@ -1,0 +1,27 @@
+name: Deploy Edge Functions
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'polla-app/supabase/functions/**'
+      - '.github/workflows/deploy-functions.yml'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: polla-app
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Derivar project ref desde SUPABASE_URL
+        run: echo "PROJECT_REF=$(echo '${{ secrets.SUPABASE_URL }}' | sed -E 's#https?://([^.]+)\.supabase\.co/?#\1#')" >> "$GITHUB_ENV"
+      - name: Set secret de la función
+        run: supabase secrets set FOOTBALL_DATA_TOKEN="${{ secrets.FOOTBALL_DATA_TOKEN }}" --project-ref "$PROJECT_REF"
+      - name: Deploy marcadores-vivo
+        run: supabase functions deploy marcadores-vivo --project-ref "$PROJECT_REF"
